@@ -1,50 +1,74 @@
 import './App.css';
-import { Button, Form, ListGroup, Container, Row, Col } from "react-bootstrap";
+import ToDoList from './ToDoList';
+import Login from './Login';
 
 import { useState } from 'react';
+import { Container } from 'react-bootstrap';
+import axios from 'axios';
+import qs from 'qs';
 
-function App() {
+axios.defaults.withCredentials = true;
+axios.defaults.baseURL = 'http://localhost:3001'
 
-    let [internalName, setInternalName] = useState(null);
-    let [toDoList, setToDoList] = useState([]);
+const App = () => {
 
-    const setToDoName = (value) => {
-        setInternalName(value.target.value);
+    let [loggedIn, setLoggedIn] = useState(false);
+    let [failed, setFailed] = useState(false);
+
+    const login = (event) => {
+        const data = qs.stringify({
+            'name': event.target.name.value,
+            'password': event.target.password.value
+        });
+
+        const config = {
+            method: 'post',
+            url: '/login',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            data: data
+        };
+
+        axios(config)
+            .then(() => setLoggedIn(true))
+            .catch(() => setFailed(true));
+
+        event.preventDefault();
     }
 
-    const createToDo = () => {
-        setInternalName("");
-        setToDoList([...toDoList, internalName])
+    const signup = (event) => {
+
+        const data = qs.stringify({
+            'name': event.target.name.value,
+            'password': event.target.password.value
+        });
+
+        const config = {
+            method: 'post',
+            url: '/signup',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            data: data
+        };
+
+        axios(config)
+            .then(() => setLoggedIn(true))
+            .catch(() => setFailed(true));
+
+        event.preventDefault();
     }
 
-    const todoClicked = (index) => {
-        setToDoList(toDoList.filter((_, i) => i !== index));
-    }
+    return <Container>
+        {!loggedIn && (
+            <Login loginCallback={(event) => login(event)} signupCallback={signup} failed={failed} />
+        )}
+        {loggedIn && (
+            <ToDoList />
 
-
-    return (
-        <Container>
-            <Row className="mt-3">
-                <Col xs={10}>
-                    <Form onSubmit={(e) => { createToDo(); e.preventDefault() }}>
-                        <Form.Control value={internalName} onChange={(value) => setToDoName(value)} placeholder="ToDo Name" />
-                    </Form>
-                </Col>
-                <Col>
-                    <Button type="submit" onClick={createToDo}>
-                        Add to List!
-                    </Button>
-                </Col>
-            </Row>
-            <Row className="mt-3">
-                <Col>
-                    <ListGroup>
-                        {toDoList.map((toDo, index) => <ListGroup.Item key={index} action onClick={() => todoClicked(index)}>{toDo}</ListGroup.Item>)}
-                    </ListGroup>
-                </Col>
-            </Row>
-        </Container >
-    );
+        )}
+    </Container>
 }
 
 export default App;
